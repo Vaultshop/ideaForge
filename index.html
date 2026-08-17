@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ideaForge Bot Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .container {
+      background: #12122a;
+      border: 1px solid #2a2a5a;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #8A2BE2;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #aaa;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a3e;
+      border: 1px solid #3a3a6a;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.3s;
+    }
+    .form-group input:focus {
+      border-color: #8A2BE2;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #8A2BE2, #6a1fb0);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-bottom: 10px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
+    }
+    .btn:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-discord {
+      background: linear-gradient(135deg, #5865F2, #4752c4);
+    }
+    .btn-discord:hover {
+      box-shadow: 0 5px 20px rgba(88, 101, 242, 0.4);
+    }
+    .status {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.success { background: #1a3a1a; color: #4ade80; display: block; }
+    .status.error { background: #3a1a1a; color: #f87171; display: block; }
+    .status.info { background: #1a2a3a; color: #60a5fa; display: block; }
+    .warning {
+      background: #3a2a1a;
+      color: #fbbf24;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    #loginScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #dashboardScreen {
+      display: none;
+    }
+    .lock-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #8A2BE2;
+    }
+    .logout-btn {
+      background: #dc2626;
+      font-size: 14px;
+      padding: 10px;
+    }
+    .logout-btn:hover {
+      background: #b91c1c;
+    }
+    .helper-text {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+    .helper-text a {
+      color: #8A2BE2;
+      text-decoration: none;
+    }
+    .helper-text a:hover {
+      text-decoration: underline;
+    }
+    .divider {
+      margin: 20px 0;
+      border-top: 1px solid #2a2a5a;
+    }
+    .section-title {
+      font-size: 14px;
+      color: #8A2BE2;
+      margin-bottom: 15px;
+      font-weight: bold;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginScreen">
+    <div class="lock-icon">🔐</div>
+    <div class="logo">⚡ ideaForge</div>
+    <div class="subtitle">Įvesk prieigos kodą norėdamas tęsti</div>
+    <div class="form-group">
+      <label for="accessCode">Prieigos kodas</label>
+      <input type="password" id="accessCode" placeholder="Įvesk kodą..." onkeypress="handleKeyPress(event)">
+    </div>
+    <button class="btn" onclick="verifyCode()">🔓 Prisijungti</button>
+    <div class="status" id="loginStatus"></div>
+  </div>
+
+  <div class="container" id="dashboardScreen">
+    <div class="logo">⚡ ideaForge</div>
+    <div class="subtitle">Discord Boto Valdymo Skydelis</div>
+    <div class="warning">
+      ️ <strong>Saugumo įspėjimas:</strong> Niekada niekam neduok savo boto tokeno.
+    </div>
+    <div class="section-title">1️⃣ Pridėk botą į serverį</div>
+    <div class="form-group">
+      <label for="clientId">Discord Client ID</label>
+      <input type="text" id="clientId" placeholder="Įvesk Client ID (iš Developer Portal)">
+      <div class="helper-text">
+        Rask čia: <a href="https://discord.com/developers/applications" target="_blank">discord.com/developers/applications</a>
+      </div>
+    </div>
+    <button class="btn btn-discord" onclick="addBotToDiscord()">🤖 Pridėti botą į Discord serverį</button>
+    <div class="divider"></div>
+    <div class="section-title">2️ Prisijunk botą</div>
+    <div class="form-group">
+      <label for="token">Discord Bot Token</label>
+      <input type="password" id="token" placeholder="Įklijuok savo botų tokeną čia...">
+      <div class="helper-text">
+        Rask savo boto nustatymuose (Bot → Reset Token)
+      </div>
+    </div>
+    <button class="btn" id="loginBtn" onclick="loginBot()">🔌 Prisijungti prie Discord</button>
+    <div class="status" id="status"></div>
+    <div class="divider"></div>
+    <button class="btn logout-btn" onclick="logout()">🚪 Atsijungti</button>
+  </div>
+
+  <script>
+    const ACCESS_CODE = 'LoginasDokumentaigg';
+    window.onload = function() {
+      if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        showDashboard();
+        checkBotStatus();
+      }
+    };
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        verifyCode();
+      }
+    }
+    function verifyCode() {
+      const codeInput = document.getElementById('accessCode');
+      const statusDiv = document.getElementById('loginStatus');
+      const enteredCode = codeInput.value.trim();
+      if (enteredCode === ACCESS_CODE) {
+        sessionStorage.setItem('isLoggedIn', 'true');
+        showDashboard();
+        codeInput.value = '';
+        statusDiv.className = 'status success';
+        statusDiv.textContent = '✅ Sėkmingai prisijungta!';
+        setTimeout(() => {
+          statusDiv.style.display = 'none';
+        }, 2000);
+      } else {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ Neteisingas prieigos kodas!';
+        codeInput.value = '';
+        codeInput.focus();
+      }
+    }
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboardScreen').style.display = 'block';
+    }
+    function logout() {
+      sessionStorage.removeItem('isLoggedIn');
+      location.reload();
+    }
+    function addBotToDiscord() {
+      const clientId = document.getElementById('clientId').value.trim();
+      if (!clientId) {
+        alert('❌ Įvesk Client ID!');
+        return;
+      }
+      const permissions = 274878024768;
+      const scope = 'bot%20applications.commands';
+      const oauthUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=${permissions}&scope=${scope}`;
+      window.open(oauthUrl, '_blank');
+      sessionStorage.setItem('clientId', clientId);
+    }
+    async function checkBotStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        const statusDiv = document.getElementById('status');
+        const btn = document.getElementById('loginBtn');
+        if (data.status === 'online') {
+          statusDiv.className = 'status success';
+          statusDiv.innerHTML = `✅ Botas prisijungęs kaip: <strong>${data.user}</strong>`;
+          btn.textContent = '🔄 Perkrauti botą';
+          document.getElementById('token').value = '';
+        } else {
+          statusDiv.className = 'status info';
+          statusDiv.textContent = 'ℹ️ Botas šiuo metu atjungtas. Įvesk tokeną ir paspausk „Prisijungti".';
+        }
+      } catch (err) {
+        console.error('Klaida tikrinant būseną:', err);
+      }
+    }
+    async function loginBot() {
+      const token = document.getElementById('token').value.trim();
+      const statusDiv = document.getElementById('status');
+      const btn = document.getElementById('loginBtn');
+      if (!token) {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = ' Prašome įvesti tokeną!';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = '⏳ Jungiamasi...';
+      statusDiv.className = 'status info';
+      statusDiv.textContent = 'ℹ️ Bandoma prisijungti prie Discord...';
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusDiv.className = 'status success';
+          statusDiv.innerHTML = `✅ ${data.message}`;
+          btn.textContent = '🔄 Perkrauti botą';
+          document.getElementById('token').value = '';
+        } else {
+          statusDiv.className = 'status error';
+          statusDiv.textContent = `❌ ${data.error}`;
+        }
+      } catch (err) {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ Nepavyko susisiekti su serveriu.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
