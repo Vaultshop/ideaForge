@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ideaForge</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; min-height: 100vh; }
+
+/* === NAV === */
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+.nav .logo { font-size: 1.5rem; font-weight: bold; background: linear-gradient(90deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { color: #fff; text-decoration: none; transition: 0.3s; }
+.nav-links a:hover { color: #8b5cf6; }
+
+/* === AUTH === */
+.auth-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 20px; }
+.auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 400px; text-align: center; }
+.auth-box h2 { margin-bottom: 10px; background: linear-gradient(90deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.auth-box p { color: #aaa; margin-bottom: 20px; font-size: 0.9rem; }
+.auth-box input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; }
+.auth-box button { width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 10px; background: linear-gradient(90deg, #8b5cf6, #ec4899); color: #fff; font-weight: bold; cursor: pointer; transition: 0.3s; }
+.auth-box button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(139,92,246,0.4); }
+.auth-toggle { margin-top: 15px; color: #aaa; font-size: 0.9rem; }
+.auth-toggle a { color: #8b5cf6; cursor: pointer; }
+
+/* === MAIN APP === */
+.app-container { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+.menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+.menu-item { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); }
+.menu-item:hover { background: rgba(139,92,246,0.2); transform: translateY(-3px); }
+.menu-item .icon { font-size: 2rem; margin-bottom: 10px; }
+
+/* === SECTIONS === */
+.section { display: none; background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+.section.active { display: block; }
+.section h2 { margin-bottom: 20px; background: linear-gradient(90deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* === FILES === */
+.file-upload-area { border: 2px dashed rgba(139,92,246,0.5); padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 20px; transition: 0.3s; }
+.file-upload-area:hover { border-color: #8b5cf6; background: rgba(139,92,246,0.05); }
+.file-upload-area input[type="file"] { display: none; }
+.file-upload-area label { cursor: pointer; color: #8b5cf6; font-weight: bold; }
+
+/* 🔄 SPINNER */
+.file-spinner {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(139, 92, 246, 0.3);
+  border-top: 4px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 15px auto;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.file-spinner.active { display: block; }
+
+.file-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+.file-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
+.file-item .file-info { flex: 1; }
+.file-item .file-name { font-weight: bold; margin-bottom: 5px; word-break: break-all; }
+.file-item .file-size { color: #888; font-size: 0.85rem; }
+.file-item .file-actions { display: flex; gap: 8px; }
+.file-item button { background: rgba(139,92,246,0.2); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: #fff; transition: 0.3s; }
+.file-item button:hover { background: rgba(139,92,246,0.4); }
+.file-item .delete-btn { background: rgba(239,68,68,0.2); }
+.file-item .delete-btn:hover { background: rgba(239,68,68,0.4); }
+.empty-files { text-align: center; padding: 40px; color: #888; }
+
+/* === CARD === */
+.card-container { perspective: 1000px; margin: 20px auto; max-width: 400px; }
+.card { position: relative; width: 100%; height: 220px; transform-style: preserve-3d; transition: 0.6s; cursor: pointer; }
+.card.flipped { transform: rotateY(180deg); }
+.card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 15px; padding: 25px; background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid rgba(255,255,255,0.1); }
+.card-back { transform: rotateY(180deg); }
+.card-number { font-size: 1.3rem; letter-spacing: 3px; margin: 20px 0; }
+.card-balance { font-size: 1.8rem; font-weight: bold; color: #8b5cf6; }
+
+/* === MINECRAFT === */
+.mc-server { background: rgba(34,139,34,0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(34,139,34,0.3); }
+.mc-server h3 { color: #4ade80; margin-bottom: 10px; }
+.mc-server .ip { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.mc-server button { background: #4ade80; color: #000; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+.mc-shop-empty { text-align: center; padding: 40px; color: #888; }
+
+/* === SETTINGS === */
+.settings-group { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 15px; }
+.settings-group h3 { margin-bottom: 15px; color: #8b5cf6; }
+.settings-group input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; }
+.settings-group button { padding: 10px 20px; border: none; border-radius: 8px; background: linear-gradient(90deg, #8b5cf6, #ec4899); color: #fff; cursor: pointer; margin-top: 10px; }
+
+/* === MODAL === */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+.modal.active { display: flex; }
+.modal-content { background: #1a1a2e; padding: 30px; border-radius: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); }
+.modal-close { float: right; cursor: pointer; font-size: 1.5rem; color: #888; }
+
+/* === FOOTER === */
+.footer { text-align: center; padding: 20px; color: #888; font-size: 0.9rem; }
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .nav { padding: 10px 15px; }
+  .nav-links { gap: 10px; font-size: 0.9rem; }
+  .menu { grid-template-columns: repeat(2, 1fr); }
+  .section { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="logo">💜 ideaForge</div>
+  <div class="nav-links">
+    <a onclick="showModal('aboutModal')">Apie</a>
+    <a onclick="showModal('contactModal')">Kontaktai</a>
+    <a href="https://discord.gg/rUps49RNc" target="_blank">Pagalba</a>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="auth-container" id="authContainer">
+  <div class="auth-box">
+    <h2 id="authTitle">Prisijungti</h2>
+    <p id="authDesc">Reikalingas tikras Gmail adresas (@gmail.com)</p>
+    <input type="email" id="authEmail" placeholder="El. paštas (Gmail)">
+    <input type="password" id="authPassword" placeholder="Slaptažodis">
+    <input type="text" id="authName" placeholder="Vardas" style="display:none;">
+    <button onclick="handleAuth()" id="authBtn">Prisijungti</button>
+    <div class="auth-toggle">
+      <span id="authToggleText">Neturi paskyros?</span>
+      <a onclick="toggleAuth()" id="authToggleLink">Registruotis</a>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app-container" id="appContainer">
+  
+  <!-- MENU -->
+  <div class="menu">
+    <div class="menu-item" onclick="showSection('dashboard')">
+      <div class="icon">📊</div>
+      <div>Skydelis</div>
+    </div>
+    <div class="menu-item" onclick="showSection('autofish')">
+      <div class="icon">🎣</div>
+      <div>AutoFish</div>
+    </div>
+    <div class="menu-item" onclick="showSection('minecraft')">
+      <div class="icon">⛏️</div>
+      <div>Minecraft</div>
+    </div>
+    <div class="menu-item" onclick="showSection('card')">
+      <div class="icon">💳</div>
+      <div>Kortelė</div>
+    </div>
+    <div class="menu-item" onclick="showSection('files')">
+      <div class="icon">📁</div>
+      <div>Failai</div>
+    </div>
+    <div class="menu-item" onclick="showSection('history')">
+      <div class="icon">🛍</div>
+      <div>Pirkinių istorija</div>
+    </div>
+    <div class="menu-item" onclick="showSection('settings')">
+      <div class="icon">⚙️</div>
+      <div>Nustatymai</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="section active" id="dashboard">
+    <h2>📊 Skydelis</h2>
+    <p>Sveiki, <span id="userName">Vartotojas</span>! 👋</p>
+    <p style="margin-top:10px; color:#aaa;">ideaForge – platforma, kurioje idėjos virsta projektais.</p>
+  </div>
+
+  <!-- AUTOFISH -->
+  <div class="section" id="autofish">
+    <h2>🎣 AutoFish</h2>
+    <p style="text-align:center; padding:40px; color:#888;">Greitai bus prieinamas</p>
+  </div>
+
+  <!-- MINECRAFT -->
+  <div class="section" id="minecraft">
+    <h2>⛏️ Minecraft</h2>
+    
+    <div class="mc-server">
+      <h3>🖥️ Serveris</h3>
+      <p>Šis serveris priklauso kitam projektui (ne ideaForge).</p>
+      <div class="ip">
+        <span>mc.craftmc.lt</span>
+        <button onclick="copyIP('mc.craftmc.lt')">Kopijuoti IP</button>
+      </div>
+      <p style="margin-top:10px; color:#888; font-size:0.9rem;">Projekto savininkas: Stonegrillo</p>
+    </div>
+
+    <h3 style="margin:20px 0 15px;">🛒 Minecraft shop</h3>
+    <div class="mc-shop-empty">
+      <p>🛒 Šiuo metu prekių nėra.</p>
+      <p style="margin-top:10px; font-size:0.9rem;">Sekite naujienas – prekės bus pridėtos netrukus!</p>
+    </div>
+  </div>
+
+  <!-- CARD -->
+  <div class="section" id="card">
+    <h2>💳 Kortelė</h2>
+    <div class="card-container">
+      <div class="card" id="bankCard" onclick="this.classList.toggle('flipped')">
+        <div class="card-face card-front">
+          <div style="display:flex; justify-content:space-between;">
+            <div>PLATINUM</div>
+            <div>ideaBank</div>
+          </div>
+          <div class="card-number" id="cardNumber">•••• •••• •••• ••••</div>
+          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+            <div>
+              <div style="font-size:0.8rem; color:#888;">Turėtojas</div>
+              <div id="cardHolder">—</div>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; color:#888;">CVV</div>
+              <div>•••</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-face card-back">
+          <div style="background:#000; height:40px; margin:-25px -25px 20px;"></div>
+          <div class="card-balance" id="cardBalance">€0.00</div>
+          <div style="color:#888; margin-top:10px;">Balansas saugomas 🛡️</div>
+          <div style="position:absolute; bottom:25px; right:25px; font-size:0.8rem; color:#888;">↻ Paspausk, kad apverstum</div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top:20px; color:#aaa;">Ačiū, kad naudojatės ideaBank! 💜</p>
+  </div>
+
+  <!-- FILES -->
+  <div class="section" id="files">
+    <h2>📁 Failai</h2>
+    <p style="color:#aaa; margin-bottom:20px;">Tavo privati failų saugykla – tik tu gali matyti, įkelti ir ištrinti failus.</p>
+    
+    <div class="file-upload-area">
+      <input type="file" id="fileInput" multiple>
+      <label for="fileInput">📤 Įkelti failą (max 10MB)</label>
+      <div class="file-spinner" id="fileSpinner"></div>
+    </div>
+
+    <div class="file-list" id="fileList">
+      <div class="empty-files" id="emptyFiles">
+        📭<br>Dar neturi jokių failų. Įkelk pirmąjį!
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="section" id="history">
+    <h2>🛍 Pirkinių istorija</h2>
+    <p style="color:#aaa; margin-bottom:20px;">Visi tavo pirkiniai su data ir laiku.</p>
+    <div id="purchaseHistory" style="color:#888; text-align:center; padding:20px;">
+      Pirkinių istorija tuščia.
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="section" id="settings">
+    <h2>⚙️ Nustatymai</h2>
+    
+    <div class="settings-group">
+      <h3>👤 Tavo duomenys</h3>
+      <p>El. paštas: <span id="settingsEmail">—</span></p>
+      <p>Vardas: <span id="settingsName">—</span></p>
+    </div>
+
+    <div class="settings-group">
+      <h3>✏️ Pakeisti vardą</h3>
+      <input type="text" id="newName" placeholder="Naujas vardas">
+      <button onclick="changeName()">Išsaugoti</button>
+    </div>
+
+    <div class="settings-group">
+      <h3>🔑 Pakeisti slaptažodį</h3>
+      <input type="password" id="oldPass" placeholder="Senas slaptažodis">
+      <input type="password" id="newPass" placeholder="Naujas slaptažodis">
+      <button onclick="changePassword()">Pakeisti</button>
+    </div>
+
+    <div class="settings-group">
+      <button onclick="logout()" style="background:linear-gradient(90deg, #ef4444, #dc2626);">🚪 Atsijungti</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="aboutModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal('aboutModal')">✕</span>
+    <h2>💜 Apie ideaForge</h2>
+    <p style="margin:15px 0;">ideaForge – tai bendruomenės platforma, kurioje idėjos virsta projektais.</p>
+    <button onclick="closeModal('aboutModal')" style="width:100%; padding:10px; border:none; border-radius:8px; background:linear-gradient(90deg,#8b5cf6,#ec4899); color:#fff; cursor:pointer; margin-top:15px;">Supratau</button>
+  </div>
+</div>
+
+<div class="modal" id="contactModal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal('contactModal')">✕</span>
+    <h2>📞 Kontaktai</h2>
+    <p style="margin:10px 0;">📞 Telefonas: +370 616 91510</p>
+    <p style="margin:10px 0;">📧 Gmail: kajuslevastro@gmail.com</p>
+    <p style="margin:10px 0;">💬 Discord: <a href="https://discord.gg/rUps49RNc" target="_blank" style="color:#8b5cf6;">discord.gg/rUps49RNc</a></p>
+    <button onclick="closeModal('contactModal')" style="width:100%; padding:10px; border:none; border-radius:8px; background:linear-gradient(90deg,#8b5cf6,#ec4899); color:#fff; cursor:pointer; margin-top:15px;">Uždaryti</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p>© 2025 ideaForge. Visos teisės saugomos. 💜</p>
+</div>
+
+<script>
+// === STATE ===
+let currentUser = null;
+let isRegistering = false;
+
+// === AUTH ===
+function toggleAuth() {
+  isRegistering = !isRegistering;
+  document.getElementById('authTitle').textContent = isRegistering ? 'Registruotis' : 'Prisijungti';
+  document.getElementById('authBtn').textContent = isRegistering ? 'Registruotis' : 'Prisijungti';
+  document.getElementById('authToggleText').textContent = isRegistering ? 'Jau turi paskyrą?' : 'Neturi paskyros?';
+  document.getElementById('authToggleLink').textContent = isRegistering ? 'Prisijunk' : 'Registruotis';
+  document.getElementById('authName').style.display = isRegistering ? 'block' : 'none';
+}
+
+function handleAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+
+  if (!email || !password) { alert('Užpildyk visus laukus!'); return; }
+  if (!email.endsWith('@gmail.com')) { alert('Reikalingas Gmail adresas!'); return; }
+
+  if (isRegistering) {
+    if (!name) { alert('Įvesk vardą!'); return; }
+    const users = JSON.parse(localStorage.getItem('ideaforge_users') || '{}');
+    if (users[email]) { alert('Toks el. paštas jau registruotas!'); return; }
+    users[email] = { name, password, balance: 2.00, cardNumber: generateCardNumber(), files: [] };
+    localStorage.setItem('ideaforge_users', JSON.stringify(users));
+    currentUser = { email, ...users[email] };
+  } else {
+    const users = JSON.parse(localStorage.getItem('ideaforge_users') || '{}');
+    if (!users[email] || users[email].password !== password) { alert('Neteisingi prisijungimo duomenys!'); return; }
+    currentUser = { email, ...users[email] };
+  }
+
+  localStorage.setItem('ideaforge_current', JSON.stringify(currentUser));
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('authContainer').style.display = 'none';
+  document.getElementById('appContainer').style.display = 'block';
+  document.getElementById('userName').textContent = currentUser.name;
+  document.getElementById('settingsEmail').textContent = currentUser.email;
+  document.getElementById('settingsName').textContent = currentUser.name;
+  document.getElementById('cardHolder').textContent = currentUser.name;
+  document.getElementById('cardNumber').textContent = currentUser.cardNumber;
+  document.getElementById('cardBalance').textContent = '€' + currentUser.balance.toFixed(2);
+  loadFiles();
+}
+
+function logout() {
+  localStorage.removeItem('ideaforge_current');
+  location.reload();
+}
+
+// === NAVIGATION ===
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// === FILES ===
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  const spinner = document.getElementById('fileSpinner');
+  spinner.classList.add('active');
+
+  let loadedCount = 0;
+  const totalFiles = files.length;
+
+  files.forEach(file => {
+    // 10MB limitas
+    if (file.size > 10 * 1024 * 1024) {
+      alert(`❌ Failas "${file.name}" per didelis! Maksimalus dydis: 10MB`);
+      loadedCount++;
+      if (loadedCount === totalFiles) spinner.classList.remove('active');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const fileData = {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        data: event.target.result,
+        uploadedAt: new Date().toISOString()
+      };
+
+      if (!currentUser.files) currentUser.files = [];
+      currentUser.files.push(fileData);
+      
+      // Išsaugoti
+      const users = JSON.parse(localStorage.getItem('ideaforge_users') || '{}');
+      users[currentUser.email] = currentUser;
+      localStorage.setItem('ideaforge_users', JSON.stringify(users));
+      localStorage.setItem('ideaforge_current', JSON.stringify(currentUser));
+
+      // Iškart rodyti failą be perkrovimo
+      renderFile(fileData, currentUser.files.length - 1);
+      
+      // Slėpti tuščią žinutę
+      const emptyMsg = document.getElementById('emptyFiles');
+      if (emptyMsg) emptyMsg.style.display = 'none';
+
+      loadedCount++;
+      if (loadedCount === totalFiles) {
+        spinner.classList.remove('active');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Reset input
+  e.target.value = '';
+});
+
+function renderFile(fileData, index) {
+  const fileList = document.getElementById('fileList');
+  const fileItem = document.createElement('div');
+  fileItem.className = 'file-item';
+  fileItem.id = 'file-' + index;
+  fileItem.innerHTML = `
+    <div class="file-info">
+      <div class="file-name">📄 ${fileData.name}</div>
+      <div class="file-size">${(fileData.size / 1024 / 1024).toFixed(2)} MB</div>
+    </div>
+    <div class="file-actions">
+      <button onclick="downloadFile(${index})">⬇️</button>
+      <button class="delete-btn" onclick="deleteFile(${index})">🗑️</button>
+    </div>
+  `;
+  fileList.appendChild(fileItem);
+}
+
+function loadFiles() {
+  const fileList = document.getElementById('fileList');
+  fileList.innerHTML = '';
+  
+  if (!currentUser.files || currentUser.files.length === 0) {
+    fileList.innerHTML = '<div class="empty-files" id="emptyFiles">📭<br>Dar neturi jokių failų. Įkelk pirmąjį!</div>';
+    return;
+  }
+
+  currentUser.files.forEach((file, index) => renderFile(file, index));
+}
+
+function downloadFile(index) {
+  const file = currentUser.files[index];
+  const link = document.createElement('a');
+  link.href = file.data;
+  link.download = file.name;
+  link.click();
+}
+
+function deleteFile(index) {
+  if (!confirm('Ar tikrai nori ištrinti šį failą?')) return;
+  currentUser.files.splice(index, 1);
+  
+  const users = JSON.parse(localStorage.getItem('ideaforge_users') || '{}');
+  users[currentUser.email] = currentUser;
+  localStorage.setItem('ideaforge_users', JSON.stringify(users));
+  localStorage.setItem('ideaforge_current', JSON.stringify(currentUser));
+  
+  loadFiles();
+}
+
+// === CARD ===
+function generateCardNumber() {
+  let num = '';
+  for (let i = 0; i < 4; i++) {
+    num += Math.floor(1000 + Math.random() * 9000) + ' ';
+  }
+  return num.trim();
+}
+
+// === SETTINGS ===
+function changeName() {
+  const newName = document.getElementById('newName').value.trim();
+  if (!newName) { alert('Įvesk naują vardą!'); return; }
+  
+  currentUser.name = newName;
+  const users = JSON.parse(localStorage.getItem('ideaforge_users') || '{}');
+  users[currentUser.email] = currentUser;
+  localStorage.setItem('ideaforge_users', JSON.stringify(users));
+  localStorage.setItem('ideaforge_current', JSON.stringify(currentUser));
+  
+  document.getElementById('userName').textContent = newName;
+  document.getElementById('settingsName').textContent = newName;
+  document.getElementById('cardHolder').textContent = newName;
+  document.getElementById('newName').value = '';
+  alert('✅ Vardas pakeistas!');
+}
+
+function changePassword() {
+  const oldPass = document.getElementById('oldPass').value;
+  const newPass = document.getElementById('newPass').value;
+  
+  if (oldPass !== currentUser.password) { alert('Neteisingas senas slaptažodis!'); return; }
+  if (!newPass || newPass.length < 6) { alert('Naujas slaptažodis per trumpas (min. 6 simboliai)!'); return; }
+  
+  currentUser.password = newPass;
+  const users = JSON.parse(localStorage.getItem('ideaforge_users') || '{}');
+  users[currentUser.email] = currentUser;
+  localStorage.setItem('ideaforge_users', JSON.stringify(users));
+  localStorage.setItem('ideaforge_current', JSON.stringify(currentUser));
+  
+  document.getElementById('oldPass').value = '';
+  document.getElementById('newPass').value = '';
+  alert('✅ Slaptažodis pakeistas!');
+}
+
+// === UTILS ===
+function copyIP(ip) {
+  navigator.clipboard.writeText(ip);
+  alert('✅ IP nukopijuotas: ' + ip);
+}
+
+// === INIT ===
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('ideaforge_current');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    showApp();
+  }
+});
+</script>
+
+</body>
+</html>
