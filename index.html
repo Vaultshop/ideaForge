@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="lt" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>CloudVault Pro | Failų Saugykla</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#8b5cf6',
+                        dark: '#0f172a',
+                        darkglass: 'rgba(15, 23, 42, 0.7)',
+                        lightglass: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Glassmorphism & Custom Styles */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Drag & Drop Zone */
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .dark .drop-zone { border-color: #475569; }
+        .dark .drop-zone.dragover { background: rgba(59, 130, 246, 0.2); }
+
+        /* Code Editor Mock */
+        .code-editor {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+
+        /* Hide sections by default */
+        .section-view { display: none; }
+        .section-view.active { display: block; animation: fadeIn 0.4s ease-out; }
+        
+        /* Auth Screen */
+        #auth-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .dark #auth-screen {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans overflow-hidden">
+
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl animate-slide-up">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mx-auto flex items-center justify-center mb-4 shadow-lg">
+                    <i class="fas fa-cloud text-white text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">CloudVault Pro</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Profesionali failų saugykla</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">El. paštas</label>
+                    <input type="email" id="login-email" class="w-full px-4 py-2 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="admin@gmail.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Slaptažodis</label>
+                    <input type="password" id="login-password" class="w-full px-4 py-2 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg shadow-blue-500/30 transition transform hover:scale-[1.02]">
+                    Prisijungti
+                </button>
+                <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                    Neturite paskyros? <button type="button" onclick="toggleAuth('register')" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">Registruotis</button>
+                </p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Slapyvardis</label>
+                    <input type="text" id="reg-nickname" class="w-full px-4 py-2 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">El. paštas</label>
+                    <input type="email" id="reg-email" class="w-full px-4 py-2 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Slaptažodis</label>
+                    <input type="password" id="reg-password" class="w-full px-4 py-2 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Kalba</label>
+                    <select id="reg-language" class="w-full px-4 py-2 rounded-lg bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="lt">Lietuvių</option>
+                        <option value="en">English</option>
+                        <option value="pl">Polski</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium shadow-lg shadow-blue-500/30 transition transform hover:scale-[1.02]">
+                    Sukurti paskyrą
+                </button>
+                <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                    Jau turite paskyrą? <button type="button" onclick="toggleAuth('login')" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">Prisijungti</button>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-container" class="hidden h-screen flex flex-col md:flex-row">
+        
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 glass border-r border-gray-200 dark:border-slate-800 flex flex-col z-20">
+            <div class="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-cloud text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-lg leading-tight">CloudVault</h2>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Pro Versija</span>
+                </div>
+            </div>
+
+            <!-- User Profile Mini -->
+            <div class="p-4 border-b border-gray-200 dark:border-slate-800 cursor-pointer hover:bg-white/50 dark:hover:bg-slate-800/50 transition" onclick="navigateTo('profile')">
+                <div class="flex items-center gap-3">
+                    <img id="sidebar-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" class="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700">
+                    <div class="flex-1 min-w-0">
+                        <p id="sidebar-nickname" class="font-medium truncate">Vartotojas</p>
+                        <p id="sidebar-role" class="text-xs text-gray-500 dark:text-gray-400">Naudotojas</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-xs text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+                <button onclick="navigateTo('dashboard')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20" data-target="dashboard">
+                    <i class="fas fa-home w-5"></i> <span data-i18n="dashboard">Panelė</span>
+                </button>
+                <button onclick="navigateTo('files')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="files">
+                    <i class="fas fa-folder w-5"></i> <span data-i18n="files">Failai</span>
+                </button>
+                <button onclick="navigateTo('coding')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="coding">
+                    <i class="fas fa-code w-5"></i> <span data-i18n="coding">Programavimas</span>
+                </button>
+                <button onclick="navigateTo('scanner')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="scanner">
+                    <i class="fas fa-shield-alt w-5"></i> <span data-i18n="scanner">Skeneris</span>
+                </button>
+                <button onclick="navigateTo('trash')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="trash">
+                    <i class="fas fa-trash w-5"></i> <span data-i18n="trash">Šiukšlinė</span>
+                </button>
+                <button onclick="navigateTo('results')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="results">
+                    <i class="fas fa-chart-pie w-5"></i> <span data-i18n="results">Rezultatai</span>
+                </button>
+                <button onclick="navigateTo('activity')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="activity">
+                    <i class="fas fa-history w-5"></i> <span data-i18n="activity">Istorija</span>
+                </button>
+                
+                <div id="admin-menu-item" class="hidden pt-4 mt-4 border-t border-gray-200 dark:border-slate-800">
+                    <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Administravimas</p>
+                    <button onclick="navigateTo('admin')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition" data-target="admin">
+                        <i class="fas fa-crown w-5"></i> <span data-i18n="admin">Admin Panelė</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Bottom Actions -->
+            <div class="p-3 border-t border-gray-200 dark:border-slate-800 space-y-1">
+                <button onclick="navigateTo('settings')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition" data-target="settings">
+                    <i class="fas fa-cog w-5"></i> <span data-i18n="settings">Nustatymai</span>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span data-i18n="logout">Atsijungti</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            <!-- Topbar -->
+            <header class="h-16 glass border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-6 z-10">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-gray-600 dark:text-gray-300" onclick="document.querySelector('aside').classList.toggle('hidden')">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 id="page-title" class="text-xl font-semibold">Panelė</h2>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <!-- Live Time -->
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-slate-800 text-sm font-mono">
+                        <i class="far fa-clock text-blue-500"></i>
+                        <span id="live-time">00:00:00</span>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center relative transition">
+                            <i class="far fa-bell text-gray-600 dark:text-gray-300"></i>
+                            <span id="notif-badge" class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+                        </button>
+                        <!-- Dropdown -->
+                        <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 glass-card rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
+                            <div class="p-3 border-b border-gray-200 dark:border-slate-700 font-semibold text-sm">Pranešimai</div>
+                            <div id="notif-list" class="p-2 space-y-2">
+                                <div class="text-sm text-gray-500 text-center py-4">Nėra naujų pranešimų</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center transition">
+                        <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                        <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 relative">
+                
+                <!-- 1. DASHBOARD -->
+                <div id="view-dashboard" class="section-view active space-y-6">
+                    <!-- Broadcast -->
+                    <div class="glass-card rounded-xl p-4 border-l-4 border-blue-500">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-broadcast-tower text-blue-500 mt-1"></i>
+                            <div>
+                                <h3 class="font-semibold text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">Naujienos</h3>
+                                <p id="broadcast-msg" class="mt-1 text-gray-800 dark:text-gray-200">Sveiki atvykę į CloudVault Pro! Sistema veikia sklandžiai.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Failų kiekis</p>
+                                    <h3 class="text-2xl font-bold mt-1" id="stat-files">0</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                    <i class="fas fa-file"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Saugykla</p>
+                                    <h3 class="text-2xl font-bold mt-1" id="stat-storage">0 MB</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                                    <i class="fas fa-hdd"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Nuskenuota</p>
+                                    <h3 class="text-2xl font-bold mt-1" id="stat-scanned">0</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                                    <i class="fas fa-shield-virus"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Sistemos būklė</p>
+                                    <h3 class="text-lg font-bold mt-1 text-green-600">Veikia</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 animate-pulse-slow">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Preview -->
+                    <div class="glass-card rounded-xl p-5">
+                        <h3 class="font-semibold mb-4">Paskutiniai atnaujinimai</h3>
+                        <div id="recent-activity-list" class="space-y-3">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. FILES -->
+                <div id="view-files" class="section-view space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="createFolder()" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-700 transition">
+                                <i class="fas fa-folder-plus mr-2"></i>Aplankas
+                            </button>
+                            <label class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition cursor-pointer">
+                                <i class="fas fa-upload mr-2"></i>Įkelti
+                                <input type="file" class="hidden" onchange="handleFileUpload(this)">
+                            </label>
+                        </div>
+                        <div class="relative w-full sm:w-64">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="file-search" placeholder="Ieškoti failų..." class="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none text-sm" oninput="renderFiles()">
+                        </div>
+                    </div>
+
+                    <!-- Drag & Drop Zone -->
+                    <div id="file-drop-zone" class="drop-zone rounded-xl p-8 text-center cursor-pointer" onclick="document.getElementById('file-input-hidden').click()">
+                        <input type="file" id="file-input-hidden" class="hidden" multiple onchange="handleFileUpload(this)">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 dark:text-gray-300 font-medium">Nutempkite failus čia arba spauskite įkėlimui</p>
+                        <p class="text-xs text-gray-400 mt-1">Palaikomi visi formatai</p>
+                    </div>
+
+                    <!-- File List -->
+                    <div class="glass-card rounded-xl overflow-hidden">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-4 py-3 font-medium">Pavadinimas</th>
+                                    <th class="px-4 py-3 font-medium hidden sm:table-cell">Dydis</th>
+                                    <th class="px-4 py-3 font-medium hidden md:table-cell">Data</th>
+                                    <th class="px-4 py-3 font-medium text-right">Veiksmai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="file-list-body" class="divide-y divide-gray-100 dark:divide-slate-800">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. CODING -->
+                <div id="view-coding" class="section-view h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex gap-2">
+                            <select id="code-language" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm outline-none">
+                                <option value="javascript">JavaScript</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="python">Python</option>
+                                <option value="cpp">C++</option>
+                            </select>
+                            <input type="text" id="code-filename" placeholder="failas.js" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm outline-none w-40">
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="downloadCode()" class="px-3 py-1.5 bg-gray-100 dark:bg-slate-800 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition">
+                                <i class="fas fa-download mr-1"></i> Atsisiųsti
+                            </button>
+                            <button onclick="saveCodeToFiles()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">
+                                <i class="fas fa-save mr-1"></i> Į saugyklą
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 glass-card rounded-xl overflow-hidden flex flex-col">
+                        <textarea id="code-editor" class="flex-1 w-full bg-gray-900 text-gray-100 p-4 code-editor outline-none resize-none" placeholder="// Pradėkite rašyti kodą čia..."></textarea>
+                    </div>
+                    <div class="mt-2 flex justify-between text-xs text-gray-500">
+                        <span>Automatinis išsaugojimas: <span class="text-green-500">Įjungtas</span></span>
+                        <span id="code-status">Paruošta</span>
+                    </div>
+                </div>
+
+                <!-- 4. SCANNER -->
+                <div id="view-scanner" class="section-view space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Upload Zone -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <div id="scanner-drop-zone" class="drop-zone rounded-xl p-12 text-center cursor-pointer bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-slate-800/50 dark:to-slate-900/50">
+                                <input type="file" id="scanner-input" class="hidden" onchange="startScan(this)">
+                                <div onclick="document.getElementById('scanner-input').click()">
+                                    <i class="fas fa-radar text-5xl text-blue-500 mb-4 animate-pulse-slow"></i>
+                                    <h3 class="text-lg font-semibold mb-2">Failų saugumo skeneris</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Nutempkite failą arba spauskite čia</p>
+                                    <p class="text-xs text-gray-400 mt-4 space-x-2">
+                                        <span class="inline-flex items-center gap-1"><i class="fas fa-virus-slash text-green-500"></i> Virusai</span>
+                                        <span class="inline-flex items-center gap-1"><i class="fas fa-brain text-purple-500"></i> AI</span>
+                                        <span class="inline-flex items-center gap-1"><i class="fas fa-link text-blue-500"></i> Nuorodos</span>
+                                        <span class="inline-flex items-center gap-1"><i class="fas fa-file-archive text-yellow-500"></i> Archyvai</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Scan Progress -->
+                            <div id="scan-progress" class="hidden glass-card rounded-xl p-6">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium" id="scan-status-text">Analizuojama...</span>
+                                    <span class="font-mono text-blue-600" id="scan-percent">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5">
+                                    <div id="scan-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                                    <div id="check-virus" class="flex items-center gap-2 text-gray-400"><i class="fas fa-circle-notch fa-spin"></i> Virusų tikrinimas</div>
+                                    <div id="check-ai" class="flex items-center gap-2 text-gray-400"><i class="fas fa-circle-notch fa-spin"></i> AI analizė</div>
+                                    <div id="check-link" class="flex items-center gap-2 text-gray-400"><i class="fas fa-circle-notch fa-spin"></i> Nuorodų tikrinimas</div>
+                                    <div id="check-archive" class="flex items-center gap-2 text-gray-400"><i class="fas fa-circle-notch fa-spin"></i> Archyvų analizė</div>
+                                    <div id="check-rep" class="flex items-center gap-2 text-gray-400"><i class="fas fa-circle-notch fa-spin"></i> Reputacija</div>
+                                    <div id="check-ext" class="flex items-center gap-2 text-gray-400"><i class="fas fa-circle-notch fa-spin"></i> Plėtinio tikrinimas</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Panel -->
+                        <div id="scan-results" class="hidden glass-card rounded-xl p-6 border-t-4 border-gray-400">
+                            <div class="text-center mb-6">
+                                <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 dark:bg-slate-800 mb-3 relative">
+                                    <svg class="w-24 h-24 transform -rotate-90">
+                                        <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" class="text-gray-200 dark:text-slate-700" />
+                                        <circle id="score-circle" cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" class="text-green-500 transition-all duration-1000" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                                    </svg>
+                                    <span id="score-text" class="absolute text-2xl font-bold">0%</span>
+                                </div>
+                                <h3 class="text-xl font-bold" id="result-title">Saugus</h3>
+                                <p class="text-sm text-gray-500" id="result-filename">failas.txt</p>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Grėsmių lygis</span>
+                                    <span id="threat-level" class="font-medium text-green-600">Žemas</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Failo tipas</span>
+                                    <span id="file-type" class="font-medium">Text</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Reputacijos balas</span>
+                                    <span id="rep-score" class="font-medium">95/100</span>
+                                </div>
+                            </div>
+
+                            <button onclick="moveScannedToFiles()" class="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition">
+                                <i class="fas fa-check mr-2"></i>Grąžinti į saugyklą
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. TRASH -->
+                <div id="view-trash" class="section-view space-y-4">
+                    <div class="glass-card rounded-xl p-4 border-l-4 border-yellow-500 mb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            <i class="fas fa-info-circle mr-2 text-yellow-500"></i>
+                            Failai čia saugomi 30 dienų. Norint galutinai ištrinti, reikia patvirtinimo kodo: <strong>SutinkuSuFailoIštrinimu</strong>
+                        </p>
+                    </div>
+                    <div class="glass-card rounded-xl overflow-hidden">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-4 py-3">Failas</th>
+                                    <th class="px-4 py-3 hidden sm:table-cell">Ištrinta</th>
+                                    <th class="px-4 py-3 text-right">Veiksmai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trash-list-body" class="divide-y divide-gray-100 dark:divide-slate-800">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 6. RESULTS (Stats) -->
+                <div id="view-results" class="section-view space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="glass-card rounded-xl p-5">
+                            <h3 class="font-semibold mb-4">Saugyklos užimtumas</h3>
+                            <canvas id="storageChart"></canvas>
+                        </div>
+                        <div class="glass-card rounded-xl p-5">
+                            <h3 class="font-semibold mb-4">Aktyvumas (7 d.)</h3>
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600" id="res-total-files">0</div>
+                            <div class="text-xs text-gray-500 uppercase mt-1">Iš viso failų</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-purple-600" id="res-total-users">1</div>
+                            <div class="text-xs text-gray-500 uppercase mt-1">Aktyvūs vartotojai</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-green-600" id="res-scanned">0</div>
+                            <div class="text-xs text-gray-500 uppercase mt-1">Nuskenuota</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold text-red-600" id="res-threats">0</div>
+                            <div class="text-xs text-gray-500 uppercase mt-1">Blokuota grėsmių</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. ADMIN PANEL -->
+                <div id="view-admin" class="section-view space-y-6">
+                    <div class="glass-card rounded-xl p-6 border-l-4 border-red-500">
+                        <h3 class="font-bold text-lg mb-4">Administratoriaus valdymas</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Transliuoti pranešimą (Broadcast)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="admin-broadcast" class="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm" placeholder="Naujas pranešimas visiems...">
+                                    <button onclick="sendBroadcast()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Siųsti</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-slate-800 flex justify-between items-center">
+                            <h3 class="font-semibold">Naudotojų valdymas</h3>
+                            <input type="text" placeholder="Ieškoti..." class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm" oninput="renderAdminUsers(this.value)">
+                        </div>
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50 dark:bg-slate-800/50 text-gray-500">
+                                <tr>
+                                    <th class="px-4 py-3">Vartotojas</th>
+                                    <th class="px-4 py-3">El. paštas</th>
+                                    <th class="px-4 py-3">Būsena</th>
+                                    <th class="px-4 py-3 text-right">Veiksmai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-list" class="divide-y divide-gray-100 dark:divide-slate-800">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 8. PROFILE -->
+                <div id="view-profile" class="section-view max-w-2xl mx-auto space-y-6">
+                    <div class="glass-card rounded-xl p-6 text-center">
+                        <div class="relative inline-block">
+                            <img id="profile-avatar" src="" class="w-24 h-24 rounded-full border-4 border-white dark:border-slate-700 shadow-lg">
+                            <label class="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white cursor-pointer hover:bg-blue-700 transition shadow-lg">
+                                <i class="fas fa-camera text-xs"></i>
+                                <input type="file" class="hidden" accept="image/*" onchange="updateProfilePic(this)">
+                            </label>
+                        </div>
+                        <h2 class="text-2xl font-bold mt-4" id="profile-nickname">Vartotojas</h2>
+                        <p class="text-gray-500" id="profile-email">user@example.com</p>
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium" id="profile-role">Naudotojas</span>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6 space-y-4">
+                        <h3 class="font-semibold border-b border-gray-200 dark:border-slate-700 pb-2">Paskyros informacija</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500 block">Registracijos data</span>
+                                <span id="profile-reg-date" class="font-medium">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Paskutinis prisijungimas</span>
+                                <span id="profile-last-login" class="font-medium">-</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Naudojama vieta</span>
+                                <span id="profile-storage" class="font-medium">0 MB</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 block">Kalba</span>
+                                <span id="profile-lang" class="font-medium">Lietuvių</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6 space-y-4">
+                        <h3 class="font-semibold border-b border-gray-200 dark:border-slate-700 pb-2">Saugumas</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-medium">Dviejų žingsnių autentifikacija (2FA)</div>
+                                <div class="text-xs text-gray-500">Papildomas saugumo sluoksnis</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" onchange="toggle2FA(this)">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. SETTINGS -->
+                <div id="view-settings" class="section-view max-w-2xl mx-auto space-y-6">
+                    <div class="glass-card rounded-xl p-6 space-y-4">
+                        <h3 class="font-semibold">Išvaizda</h3>
+                        <div class="flex items-center justify-between">
+                            <span>Tamsi tema</span>
+                            <button onclick="toggleTheme()" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 text-sm font-medium">Perjungti</button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Kalba</span>
+                            <select id="settings-lang" onchange="changeLanguage(this.value)" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm">
+                                <option value="lt">Lietuvių</option>
+                                <option value="en">English</option>
+                                <option value="pl">Polski</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card rounded-xl p-6 space-y-4">
+                        <h3 class="font-semibold">Duomenys</h3>
+                        <button onclick="exportData()" class="w-full py-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition text-sm">
+                            <i class="fas fa-download mr-2"></i>Eksportuoti duomenis (JSON)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 10. ACTIVITY -->
+                <div id="view-activity" class="section-view space-y-4">
+                    <div class="glass-card rounded-xl p-4">
+                        <h3 class="font-semibold mb-4">Veiklos žurnalas</h3>
+                        <div id="activity-log-list" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Confirmation -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="glass bg-white dark:bg-slate-900 w-full max-w-md p-6 rounded-2xl shadow-2xl animate-slide-up">
+            <h3 class="text-lg font-bold mb-2" id="confirm-title">Patvirtinimas</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="confirm-msg">Įveskite patvirtinimo kodą:</p>
+            <input type="text" id="confirm-code" class="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 mb-4 font-mono text-center tracking-widest uppercase" placeholder="KODAS">
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-2 rounded-lg border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800 transition">Atšaukti</button>
+                <button onclick="executeConfirmedAction()" class="flex-1 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition">Patvirtinti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Preview -->
+    <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-200 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="font-semibold" id="preview-title">Peržiūra</h3>
+                <button onclick="closePreview()" class="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-auto flex-1 bg-gray-50 dark:bg-slate-950 flex items-center justify-center">
+                <div id="preview-content" class="text-center">
+                    <i class="fas fa-file text-6xl text-gray-400 mb-4"></i>
+                    <p>Peržiūra nepalaikoma šiam failo tipui</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE MANAGEMENT ---
+        const ADMIN_EMAIL = 'admin@gmail.com';
+        const ADMIN_PASS = 'Adminasloginukaskidgg';
+        const DELETE_CODE = 'SUTINKUSUFAILOIŠTRINIMU';
+        const ADMIN_DELETE_CODE = 'PASSTRINIMAS';
+
+        let appState = {
+            currentUser: null,
+            theme: localStorage.getItem('theme') || 'light',
+            language: localStorage.getItem('language') || 'lt',
+            users: JSON.parse(localStorage.getItem('cv_users')) || [
+                { id: 1, nickname: 'Administratorius', email: ADMIN_EMAIL, password: ADMIN_PASS, role: 'admin', lang: 'lt', regDate: '2023-01-01', lastLogin: '2023-10-25', avatar: 'https://ui-avatars.com/api/?name=Admin&background=ef4444&color=fff', blocked: false, storageUsed: 0 }
+            ],
+            files: JSON.parse(localStorage.getItem('cv_files')) || [],
+            trash: JSON.parse(localStorage.getItem('cv_trash')) || [],
+            logs: JSON.parse(localStorage.getItem('cv_logs')) || [],
+            notifications: JSON.parse(localStorage.getItem('cv_notifs')) || [],
+            broadcast: localStorage.getItem('cv_broadcast') || 'Sveiki atvykę į CloudVault Pro! Sistema veikia sklandžiai.',
+            scannedCount: parseInt(localStorage.getItem('cv_scanned')) || 0,
+            threatCount: parseInt(localStorage.getItem('cv_threats')) || 0
+        };
+
+        let pendingAction = null;
+        let charts = {};
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme();
+            updateLiveTime();
+            setInterval(updateLiveTime, 1000);
+            
+            // Check session
+            const session = sessionStorage.getItem('cv_session');
+            if (session) {
+                appState.currentUser = JSON.parse(session);
+                showApp();
+            }
+
+            // Drag & Drop listeners
+            setupDragAndDrop();
+        });
+
+        function saveState() {
+            localStorage.setItem('cv_users', JSON.stringify(appState.users));
+            localStorage.setItem('cv_files', JSON.stringify(appState.files));
+            localStorage.setItem('cv_trash', JSON.stringify(appState.trash));
+            localStorage.setItem('cv_logs', JSON.stringify(appState.logs));
+            localStorage.setItem('cv_notifs', JSON.stringify(appState.notifications));
+            localStorage.setItem('cv_broadcast', appState.broadcast);
+            localStorage.setItem('cv_scanned', appState.scannedCount);
+            localStorage.setItem('cv_threats', appState.threatCount);
+        }
+
+        // --- AUTHENTICATION ---
+        function toggleAuth(mode) {
+            document.getElementById('login-form').classList.toggle('hidden', mode !== 'login');
+            document.getElementById('register-form').classList.toggle('hidden', mode !== 'register');
+        }
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            
+            const user = appState.users.find(u => u.email === email && u.password === pass);
+            if (user) {
+                if (user.blocked) {
+                    alert('Paskyra užblokuota. Kreipkitės į administratorių.');
+                    return;
+                }
+                appState.currentUser = user;
+                user.lastLogin = new Date().toISOString();
+                saveState();
+                sessionStorage.setItem('cv_session', JSON.stringify(user));
+                addLog(`Prisijungė: ${user.email}`);
+                showApp();
+            } else {
+                alert('Neteisingas el. paštas arba slaptažodis');
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newUser = {
+                id: Date.now(),
+                nickname: document.getElementById('reg-nickname').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+                role: 'user',
+                lang: document.getElementById('reg-language').value,
+                regDate: new Date().toISOString().split('T')[0],
+                lastLogin: new Date().toISOString(),
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('reg-nickname').value)}&background=3b82f6&color=fff`,
+                blocked: false,
+                storageUsed: 0
+            };
+            
+            if (appState.users.find(u => u.email === newUser.email)) {
+                alert('Šis el. paštas jau registruotas');
+                return;
+            }
+            
+            appState.users.push(newUser);
+            saveState();
+            alert('Registracija sėkminga! Prisijunkite.');
+            toggleAuth('login');
+        });
+
+        function logout() {
+            sessionStorage.removeItem('cv_session');
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            
+            // Setup UI
+            document.getElementById('sidebar-nickname').textContent = appState.currentUser.nickname;
+            document.getElementById('sidebar-role').textContent = appState.currentUser.role === 'admin' ? 'Administratorius' : 'Naudotojas';
+            document.getElementById('sidebar-avatar').src = appState.currentUser.avatar;
+            
+            if (appState.currentUser.role === 'admin') {
+                document.getElementById('admin-menu-item').classList.remove('hidden');
+            }
+            
+            document.getElementById('broadcast-msg').textContent = appState.broadcast;
+            
+            updateProfileUI();
+            navigateTo('dashboard');
+            renderFiles();
+            renderTrash();
+            renderAdminUsers();
+            renderActivity();
+            updateStats();
+        }
+
+        // --- NAVIGATION ---
+        function navigateTo(view) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 'dark:text-blue-400');
+                btn.classList.add('text-gray-600', 'dark:text-gray-300');
+                if (btn.dataset.target === view) {
+                    btn.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 'dark:text-blue-400');
+                    btn.classList.remove('text-gray-600', 'dark:text-gray-300');
+                }
+            });
+
+            const titles = {
+                dashboard: 'Panelė', files: 'Failų saugykla', coding: 'Programavimo aplinka',
+                scanner: 'Saugumo skeneris', trash: 'Šiukšlinė', results: 'Statistika',
+                admin: 'Administravimas', profile: 'Profilis', settings: 'Nustatymai', activity: 'Veiklos istorija'
+            };
+            document.getElementById('page-title').textContent = titles[view] || view;
+
+            if (view === 'results') initCharts();
+        }
+
+        // --- DASHBOARD & TIME ---
+        function updateLiveTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('lt-LT', { timeZone: 'Europe/Vilnius', hour12: false });
+            const el = document.getElementById('live-time');
+            if (el) el.textContent = timeStr;
+        }
+
+        // --- FILES SYSTEM ---
+        function handleFileUpload(input) {
+            const files = Array.from(input.files);
+            files.forEach(file => {
+                const newFile = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: (file.size / 1024).toFixed(1) + ' KB',
+                    type: file.type || 'unknown',
+                    date: new Date().toISOString().split('T')[0],
+                    color: getRandomColor()
+                };
+                appState.files.push(newFile);
+                appState.currentUser.storageUsed += (file.size / 1024 / 1024); // MB
+                addNotification(`Failas "${file.name}" sėkmingai įkeltas`);
+                addLog(`Įkeltas failas: ${file.name}`);
+            });
+            saveState();
+            renderFiles();
+            updateStats();
+            input.value = '';
+        }
+
+        function renderFiles() {
+            const search = document.getElementById('file-search')?.value.toLowerCase() || '';
+            const tbody = document.getElementById('file-list-body');
+            tbody.innerHTML = '';
+            
+            const filtered = appState.files.filter(f => f.name.toLowerCase().includes(search));
+            
+            filtered.forEach(file => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-slate-800/50 transition';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs" style="background-color: ${file.color}">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <span class="font-medium">${file.name}</span>
+                    </td>
+                    <td class="px-4 py-3 hidden sm:table-cell text-gray-500">${file.size}</td>
+                    <td class="px-4 py-3 hidden md:table-cell text-gray-500">${file.date}</td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="previewFile(${file.id})" class="text-blue-600 hover:text-blue-800 mr-3" title="Peržiūrėti"><i class="fas fa-eye"></i></button>
+                        <button onclick="moveToTrash(${file.id})" class="text-red-600 hover:text-red-800" title="Ištrinti"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function createFolder() {
+            const name = prompt('Aplanko pavadinimas:');
+            if (name) {
+                appState.files.push({
+                    id: Date.now(),
+                    name: name + ' (Aplankas)',
+                    size: '0 KB',
+                    type: 'folder',
+                    date: new Date().toISOString().split('T')[0],
+                    color: '#f59e0b'
+                });
+                saveState();
+                renderFiles();
+                addLog('Sukurtas aplankas: ' + name);
+            }
+        }
+
+        function moveToTrash(fileId) {
+            const file = appState.files.find(f => f.id === fileId);
+            if (file) {
+                appState.trash.push({ ...file, deletedDate: new Date().toISOString().split('T')[0] });
+                appState.files = appState.files.filter(f => f.id !== fileId);
+                saveState();
+                renderFiles();
+                renderTrash();
+                addNotification(`Failas "${file.name}" perkeltas į šiukšlinę`);
+                addLog(`Ištrintas failas: ${file.name}`);
+            }
+        }
+
+        // --- TRASH SYSTEM ---
+        function renderTrash() {
+            const tbody = document.getElementById('trash-list-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            appState.trash.forEach(file => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-slate-800/50 transition';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 flex items-center gap-3">
+                        <i class="fas fa-file text-gray-400"></i>
+                        <span class="font-medium">${file.name}</span>
+                    </td>
+                    <td class="px-4 py-3 hidden sm:table-cell text-gray-500">${file.deletedDate}</td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="restoreFromTrash(${file.id})" class="text-green-600 hover:text-green-800 mr-3" title="Atkurti"><i class="fas fa-undo"></i></button>
+                        <button onclick="confirmDeletePermanent(${file.id})" class="text-red-600 hover:text-red-800" title="Galutinai ištrinti"><i class="fas fa-times-circle"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function restoreFromTrash(fileId) {
+            const file = appState.trash.find(f => f.id === fileId);
+            if (file) {
+                appState.files.push(file);
+                appState.trash = appState.trash.filter(f => f.id !== fileId);
+                saveState();
+                renderFiles();
+                renderTrash();
+                addLog(`Atkurtas failas: ${file.name}`);
+            }
+        }
+
+        function confirmDeletePermanent(fileId) {
+            pendingAction = () => {
+                appState.trash = appState.trash.filter(f => f.id !== fileId);
+                saveState();
+                renderTrash();
+                addLog('Galutinai ištrintas failas iš šiukšlinės');
+            };
+            showConfirmModal('Galutinis ištrynimas', 'Įveskite kodą: SutinkuSuFailoIštrinimu', DELETE_CODE);
+        }
+
+        // --- SCANNER SYSTEM ---
+        function startScan(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            document.getElementById('scan-progress').classList.remove('hidden');
+            document.getElementById('scan-results').classList.add('hidden');
+            
+            let progress = 0;
+            const checks = ['check-virus', 'check-ai', 'check-link', 'check-archive', 'check-rep', 'check-ext'];
+            let checkIndex = 0;
+            
+            const interval = setInterval(() => {
+                progress += 2;
+                document.getElementById('scan-bar').style.width = progress + '%';
+                document.getElementById('scan-percent').textContent = progress + '%';
+                
+                if (progress % 15 === 0 && checkIndex < checks.length) {
+                    document.getElementById(checks[checkIndex]).innerHTML = '<i class="fas fa-check-circle text-green-500"></i> Baigta';
+                    document.getElementById(checks[checkIndex]).classList.remove('text-gray-400');
+                    document.getElementById(checks[checkIndex]).classList.add('text-green-600');
+                    checkIndex++;
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    finishScan(file);
+                }
+            }, 50);
+        }
+
+        function finishScan(file) {
+            appState.scannedCount++;
+            const isSafe = Math.random() > 0.2; // 80% safe mock
+            
+            if (!isSafe) appState.threatCount++;
+            saveState();
+            
+            document.getElementById('scan-progress').classList.add('hidden');
+            document.getElementById('scan-results').classList.remove('hidden');
+            document.getElementById('result-filename').textContent = file.name;
+            
+            const score = isSafe ? Math.floor(Math.random() * 10) + 90 : Math.floor(Math.random() * 40) + 20;
+            const circle = document.getElementById('score-circle');
+            const offset = 251.2 - (251.2 * score) / 100;
+            
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+                circle.classList.add(score > 80 ? 'text-green-500' : 'text-red-500');
+                circle.classList.remove('text-gray-400');
+            }, 100);
+            
+            document.getElementById('score-text').textContent = score + '%';
+            document.getElementById('result-title').textContent = score > 80 ? 'Saugus failas' : 'Aptikta grėsmė!';
+            document.getElementById('result-title').className = `text-xl font-bold ${score > 80 ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('threat-level').textContent = score > 80 ? 'Žemas' : 'Aukštas';
+            document.getElementById('threat-level').className = `font-medium ${score > 80 ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('file-type').textContent = file.type || 'Unknown';
+            document.getElementById('rep-score').textContent = score + '/100';
+            
+            // Store scanned file temporarily
+            window.lastScannedFile = {
+                name: file.name,
+                size: (file.size / 1024).toFixed(1) + ' KB',
+                type: file.type,
+                date: new Date().toISOString().split('T')[0],
+                color: isSafe ? '#10b981' : '#ef4444'
+            };
+            
+            addLog(`Nuskenuotas failas: ${file.name} (Saugumas: ${score}%)`);
+            if (!isSafe) addNotification(`Įspėjimas: Aptikta potenciali grėsmė faile ${file.name}`);
+        }
+
+        function moveScannedToFiles() {
+            if (window.lastScannedFile) {
+                appState.files.push({ ...window.lastScannedFile, id: Date.now() });
+                saveState();
+                renderFiles();
+                addNotification('Saugus failas perkeltas į saugyklą');
+                document.getElementById('scan-results').classList.add('hidden');
+                document.getElementById('scanner-input').value = '';
+            }
+        }
+
+        // --- CODING ---
+        function saveCodeToFiles() {
+            const code = document.getElementById('code-editor').value;
+            const filename = document.getElementById('code-filename').value || 'code.txt';
+            const lang = document.getElementById('code-language').value;
+            
+            const blob = new Blob([code], { type: 'text/plain' });
+            const file = new File([blob], filename, { type: 'text/plain' });
+            
+            appState.files.push({
+                id: Date.now(),
+                name: filename,
+                size: (blob.size / 1024).toFixed(1) + ' KB',
+                type: `code/${lang}`,
+                date: new Date().toISOString().split('T')[0],
+                color: '#8b5cf6'
+            });
+            saveState();
+            renderFiles();
+            document.getElementById('code-status').textContent = 'Išsaugota į saugyklą!';
+            setTimeout(() => document.getElementById('code-status').textContent = 'Paruošta', 2000);
+            addLog(`Sukurtas kodas: ${filename}`);
+        }
+
+        function downloadCode() {
+            const code = document.getElementById('code-editor').value;
+            const filename = document.getElementById('code-filename').value || 'code.txt';
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+
+        // --- ADMIN PANEL ---
+        function renderAdminUsers(search = '') {
+            const tbody = document.getElementById('admin-users-list');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const filtered = appState.users.filter(u => u.nickname.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
+            
+            filtered.forEach(user => {
+                if (user.email === ADMIN_EMAIL) return; // Hide main admin from list
+                
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-slate-800/50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 flex items-center gap-2">
+                        <img src="${user.avatar}" class="w-8 h-8 rounded-full">
+                        <span>${user.nickname}</span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500">${user.email}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded-full text-xs ${user.blocked ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
+                            ${user.blocked ? 'Užblokuotas' : 'Aktyvus'}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="toggleBlockUser(${user.id})" class="text-sm ${user.blocked ? 'text-green-600' : 'text-yellow-600'} hover:underline mr-3">
+                            ${user.blocked ? 'Atblokuoti' : 'Blokuoti'}
+                        </button>
+                        <button onclick="confirmDeleteUser(${user.id})" class="text-sm text-red-600 hover:underline">Šalinti</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleBlockUser(userId) {
+            const user = appState.users.find(u => u.id === userId);
+            if (user) {
+                user.blocked = !user.blocked;
+                saveState();
+                renderAdminUsers();
+                addLog(`Vartotojas ${user.email} ${user.blocked ? 'užblokuotas' : 'atblokuotas'}`);
+            }
+        }
+
+        function confirmDeleteUser(userId) {
+            pendingAction = () => {
+                appState.users = appState.users.filter(u => u.id !== userId);
+                saveState();
+                renderAdminUsers();
+                addLog('Pašalinta vartotojo paskyra');
+            };
+            showConfirmModal('Paskyros šalinimas', 'Įveskite administratoriaus kodą: Passtrinimas', ADMIN_DELETE_CODE);
+        }
+
+        function sendBroadcast() {
+            const msg = document.getElementById('admin-broadcast').value;
+            if (msg) {
+                appState.broadcast = msg;
+                saveState();
+                document.getElementById('broadcast-msg').textContent = msg;
+                document.getElementById('admin-broadcast').value = '';
+                addNotification('Naujas transliacijos pranešimas paskelbtas');
+                addLog('Paskelbtas broadcast pranešimas');
+            }
+        }
+
+        // --- MODAL SYSTEM ---
+        function showConfirmModal(title, msg, expectedCode) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-msg').textContent = msg;
+            document.getElementById('confirm-code').value = '';
+            document.getElementById('confirm-code').dataset.expected = expectedCode;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            pendingAction = null;
+        }
+
+        function executeConfirmedAction() {
+            const input = document.getElementById('confirm-code').value.toUpperCase().trim();
+            const expected = document.getElementById('confirm-code').dataset.expected;
+            
+            if (input === expected) {
+                closeModal();
+                if (pendingAction) pendingAction();
+            } else {
+                alert('Neteisingas patvirtinimo kodas!');
+            }
+        }
+
+        // --- PROFILE & SETTINGS ---
+        function updateProfileUI() {
+            const u = appState.currentUser;
+            document.getElementById('profile-avatar').src = u.avatar;
+            document.getElementById('profile-nickname').textContent = u.nickname;
+            document.getElementById('profile-email').textContent = u.email;
+            document.getElementById('profile-role').textContent = u.role === 'admin' ? 'Administratorius' : 'Naudotojas';
+            document.getElementById('profile-reg-date').textContent = u.regDate;
+            document.getElementById('profile-last-login').textContent = new Date(u.lastLogin).toLocaleString('lt-LT');
+            document.getElementById('profile-storage').textContent = u.storageUsed.toFixed(2) + ' MB';
+            document.getElementById('profile-lang').textContent = u.lang === 'lt' ? 'Lietuvių' : u.lang === 'en' ? 'English' : 'Polski';
+            document.getElementById('settings-lang').value = u.lang;
+        }
+
+        function updateProfilePic(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    appState.currentUser.avatar = e.target.result;
+                    // Update in users array
+                    const idx = appState.users.findIndex(u => u.id === appState.currentUser.id);
+                    if (idx !== -1) appState.users[idx].avatar = e.target.result;
+                    saveState();
+                    updateProfileUI();
+                    document.getElementById('sidebar-avatar').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function toggleTheme() {
+            appState.theme = appState.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', appState.theme);
+            applyTheme();
+        }
+
+        function applyTheme() {
+            if (appState.theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function changeLanguage(lang) {
+            appState.currentUser.lang = lang;
+            appState.language = lang;
+            localStorage.setItem('language', lang);
+            const idx = appState.users.findIndex(u => u.id === appState.currentUser.id);
+            if (idx !== -1) appState.users[idx].lang = lang;
+            saveState();
+            updateProfileUI();
+            // Simple i18n mock
+            const texts = {
+                lt: { dashboard: 'Panelė', files: 'Failai', coding: 'Programavimas', scanner: 'Skeneris', trash: 'Šiukšlinė', results: 'Rezultatai', activity: 'Istorija', admin: 'Admin Panelė', settings: 'Nustatymai', logout: 'Atsijungti' },
+                en: { dashboard: 'Dashboard', files: 'Files', coding: 'Coding', scanner: 'Scanner', trash: 'Trash', results: 'Results', activity: 'Activity', admin: 'Admin Panel', settings: 'Settings', logout: 'Logout' },
+                pl: { dashboard: 'Panel', files: 'Pliki', coding: 'Kodowanie', scanner: 'Skaner', trash: 'Kosz', results: 'Wyniki', activity: 'Historia', admin: 'Panel Admina', settings: 'Ustawienia', logout: 'Wyloguj' }
+            };
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                if (texts[lang][key]) el.textContent = texts[lang][key];
+            });
+        }
+
+        // --- UTILS ---
+        function getRandomColor() {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function addLog(action) {
+            appState.logs.unshift({
+                date: new Date().toLocaleString('lt-LT'),
+                action: action,
+                user: appState.currentUser?.email || 'System'
+            });
+            if (appState.logs.length > 50) appState.logs.pop();
+            saveState();
+            renderActivity();
+        }
+
+        function renderActivity() {
+            const list = document.getElementById('activity-log-list');
+            if (!list) return;
+            list.innerHTML = appState.logs.map(log => `
+                <div class="flex gap-3 text-sm border-l-2 border-blue-500 pl-3 py-1">
+                    <div class="flex-1">
+                        <div class="font-medium text-gray-800 dark:text-gray-200">${log.action}</div>
+                        <div class="text-xs text-gray-500">${log.date} • ${log.user}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Recent activity on dashboard
+            const recent = document.getElementById('recent-activity-list');
+            if (recent) {
+                recent.innerHTML = appState.logs.slice(0, 3).map(log => `
+                    <div class="flex items-center gap-3 text-sm">
+                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span class="flex-1 truncate">${log.action}</span>
+                        <span class="text-xs text-gray-400">${log.date.split(' ')[1]}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function addNotification(msg) {
+            appState.notifications.unshift({ msg, date: new Date().toLocaleTimeString('lt-LT'), read: false });
+            if (appState.notifications.length > 20) appState.notifications.pop();
+            saveState();
+            updateNotifBadge();
+        }
+
+        function updateNotifBadge() {
+            const unread = appState.notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notif-badge');
+            if (unread > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+            
+            const list = document.getElementById('notif-list');
+            if (appState.notifications.length === 0) {
+                list.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Nėra naujų pranešimų</div>';
+            } else {
+                list.innerHTML = appState.notifications.map(n => `
+                    <div class="p-3 rounded-lg ${n.read ? 'bg-transparent' : 'bg-blue-50 dark:bg-blue-900/20'} text-sm">
+                        <div class="font-medium">${n.msg}</div>
+                        <div class="text-xs text-gray-500 mt-1">${n.date}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleNotifications() {
+            const drop = document.getElementById('notif-dropdown');
+            drop.classList.toggle('hidden');
+            if (!drop.classList.contains('hidden')) {
+                appState.notifications.forEach(n => n.read = true);
+                saveState();
+                updateNotifBadge();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('stat-files').textContent = appState.files.length;
+            document.getElementById('stat-storage').textContent = appState.currentUser.storageUsed.toFixed(1) + ' MB';
+            document.getElementById('stat-scanned').textContent = appState.scannedCount;
+            
+            document.getElementById('res-total-files').textContent = appState.files.length;
+            document.getElementById('res-total-users').textContent = appState.users.length;
+            document.getElementById('res-scanned').textContent = appState.scannedCount;
+            document.getElementById('res-threats').textContent = appState.threatCount;
+        }
+
+        function setupDragAndDrop() {
+            ['file-drop-zone', 'scanner-drop-zone'].forEach(id => {
+                const zone = document.getElementById(id);
+                if (!zone) return;
+                
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('dragover');
+                });
+                
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('dragover');
+                });
+                
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('dragover');
+                    if (id === 'file-drop-zone') {
+                        const input = document.getElementById('file-input-hidden');
+                        input.files = e.dataTransfer.files;
+                        handleFileUpload(input);
+                    } else if (id === 'scanner-drop-zone') {
+                        const input = document.getElementById('scanner-input');
+                        input.files = e.dataTransfer.files;
+                        startScan(input);
+                    }
+                });
+            });
+        }
+
+        function initCharts() {
+            if (charts.storage) charts.storage.destroy();
+            if (charts.activity) charts.activity.destroy();
+            
+            const ctx1 = document.getElementById('storageChart').getContext('2d');
+            charts.storage = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Naudojama', 'Laisva'],
+                    datasets: [{
+                        data: [appState.currentUser.storageUsed, 1000 - appState.currentUser.storageUsed],
+                        backgroundColor: ['#3b82f6', '#e2e8f0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+            
+            const ctx2 = document.getElementById('activityChart').getContext('2d');
+            charts.activity = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Pn', 'An', 'Tr', 'Kt', 'Pn', 'Št', 'Sk'],
+                    datasets: [{
+                        label: 'Veiksmai',
+                        data: [12, 19, 3, 5, 2, 3, appState.logs.length],
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function previewFile(fileId) {
+            const file = appState.files.find(f => f.id === fileId);
+            if (!file) return;
+            
+            document.getElementById('preview-title').textContent = file.name;
+            const content = document.getElementById('preview-content');
+            
+            if (file.name.endsWith('.jpg') || file.name.endsWith('.png')) {
+                content.innerHTML = `<div class="text-gray-400"><i class="fas fa-image text-6xl mb-4"></i><p>Paveikslėlio peržiūra</p></div>`;
+            } else if (file.name.endsWith('.txt') || file.name.endsWith('.js') || file.name.endsWith('.html')) {
+                content.innerHTML = `<div class="text-left w-full bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">Failo turinio peržiūra...</div>`;
+            } else {
+                content.innerHTML = `<i class="fas fa-file text-6xl text-gray-400 mb-4"></i><p>Peržiūra nepalaikoma</p>`;
+            }
+            
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+
+        function closePreview() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "cloudvault_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function toggle2FA(checkbox) {
+            addNotification(checkbox.checked ? '2FA įjungtas' : '2FA išjungtas');
+            addLog(`2FA nustatymas pakeistas į: ${checkbox.checked}`);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                document.getElementById('notif-dropdown')?.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
